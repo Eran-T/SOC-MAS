@@ -1,0 +1,726 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Multi-Agent System [CYBERMODE]</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/socket.io/4.7.4/socket.io.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=VT323&display=swap" rel="stylesheet">
+
+
+    <style>
+        /* --- CYBER THEME OVERHAUL --- */
+
+        /* Font, background, and core text styles */
+        body {
+            font-family: 'VT323', monospace;
+            background-color: #000;
+            color: #00FF41; /* Matrix green */
+            text-shadow: 0 0 0.2em #00FF41;
+            /* Scanline effect for CRT monitor feel */
+            background-image: repeating-linear-gradient(
+                rgba(0, 0, 0, 0) 0px,
+                rgba(0, 0, 0, 0) 2px,
+                rgba(255, 255, 255, 0.05) 3px,
+                rgba(255, 255, 255, 0.05) 4px
+            );
+            background-size: 100% 4px;
+        }
+
+        /* Blinking cursor for typing effect */
+        .typing::after {
+            content: '_';
+            animation: blink 1s step-end infinite;
+        }
+        /* Persistent blinking cursor for the log */
+        .log-cursor {
+            display: inline-block; /* Allows cursor to sit next to text */
+            width: 0.6em; /* Width of the underscore character */
+            overflow: hidden; /* Hide overflow if content changes unexpectedly */
+            vertical-align: bottom; /* Align with text baseline */
+            animation: blink 1s step-end infinite;
+            color: #00FF41; /* Ensure it's green */
+            text-shadow: none;
+        }
+        .log-cursor::after {
+            content: '_';
+        }
+
+        @keyframes blink {
+            50% { opacity: 0; }
+        }
+
+        /* General container/panel styling */
+        .cyber-panel {
+            background-color: rgba(0, 20, 0, 0.5); /* Dark green transparency */
+            border: 1px solid #00FF41;
+            box-shadow: 0 0 0.6em #00FF41, inset 0 0 0.6em #00FF41;
+            height: 75vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Agent visualization box styling */
+        .agent-box {
+            background-color: #000;
+            border: 1px solid #00FF41;
+            transition: all 0.3s ease-in-out;
+        }
+        .agent-box.active-caller {
+            background-color: #00FF41;
+            color: #000;
+            text-shadow: none;
+            box-shadow: 0 0 20px #00FF41, 0 0 30px #00FF41;
+            transform: scale(1.05);
+        }
+        /* Make text inside active box black for readability */
+        .agent-box.active-caller h3, .agent-box.active-caller p {
+            color: #000;
+            text-shadow: none;
+        }
+
+        /* Inputs and Buttons */
+        .cyber-input, .cyber-button {
+            font-family: 'VT323', monospace;
+            background-color: transparent;
+            border: 1px solid #00FF41;
+            color: #00FF41;
+            text-shadow: 0 0 5px #00FF41;
+            box-shadow: 0 0 5px #00FF41;
+            transition: all 0.2s ease-in-out;
+            border-radius: 0; /* Sharp corners */
+            font-size: 1.1rem;
+        }
+        .cyber-button:hover:not(:disabled) {
+            background-color: #00FF41;
+            color: #000;
+            text-shadow: none;
+        }
+        .cyber-button:disabled {
+            border-color: #005215;
+            color: #005215;
+            text-shadow: none;
+            box-shadow: none;
+            cursor: not-allowed;
+            opacity: 0.5;
+        }
+        
+        /* Custom colors for control buttons */
+        #restart-btn { border-color: #ff0000; color: #ff0000; text-shadow: 0 0 5px #ff0000; }
+        #restart-btn:hover { background-color: #ff0000; color: #000; text-shadow: none; }
+        #next-step-btn { border-color: #39ff14; color: #39ff14; text-shadow: 0 0 5px #39ff14; }
+        #next-step-btn:hover:not(:disabled) { background-color: #39ff14; color: #000; text-shadow: none; }
+        
+        #chat-input {
+            min-width: 0;
+        }
+
+        /* Chat Bubbles */
+        .chat-bubble-user {
+            background-color: #005215; /* Darker green */
+            color: #9effb5; /* Lighter green text for contrast */
+            text-shadow: none;
+            border: 1px solid #00FF41;
+        }
+        .chat-bubble-bot {
+            background-color: transparent;
+            border: 1px solid #00FF41;
+        }
+
+        /* Scrollbar styling */
+        ::-webkit-scrollbar { width: 8px; }
+        ::-webkit-scrollbar-track { background: #000; }
+        ::-webkit-scrollbar-thumb { background: #00FF41; box-shadow: 0 0 5px #00FF41; }
+        
+        /* Headers and Titles */
+        h1, h2, h3 {
+            text-transform: uppercase; /* Classic terminal look */
+            letter-spacing: 2px;
+        }
+        h1 { font-size: 2.5rem; animation: text-flicker 3s linear infinite; }
+        p, .text-sm { color: #9effb5; text-shadow: 0 0 3px #00FF41; }
+        
+        /* Header flicker animation */
+        @keyframes text-flicker {
+            0% { opacity: 0.8; }
+            5% { opacity: 0.5; }
+            10% { opacity: 0.9; }
+            15% { opacity: 0.4; }
+            20% { opacity: 1; }
+            100% { opacity: 1; }
+        }
+
+        /* Specific element adjustments */
+        #message-display {
+            border: 1px dashed #00FF41;
+            background: rgba(0, 10, 0, 0.3);
+            min-height: 8rem;
+            max-height: 12rem;
+            overflow-y: auto;
+            white-space: pre-wrap;
+            word-break: break-all;
+            font-size: 1.45rem;
+        }
+        #event-log { 
+            font-size: 1.2rem; 
+            text-shadow: none;
+            flex-grow: 1;
+            overflow-y: auto;
+            padding-right: 0.5rem; /* For scrollbar spacing */
+        }
+        .log-entry { border-bottom: 1px solid #005215; }
+        
+        .log-entry .timestamp { 
+            color: #008f25; 
+        }
+
+        #from-agent-box h3, #to-agent-box h3 {
+            text-shadow: 0 0 0.15em #00FF41;
+        }
+
+        .log-entry .message-content {
+            white-space: pre-wrap; /* Preserve newlines and spaces */
+            word-break: break-word; /* Break long words to prevent overflow */
+            font-size: 1.3rem;
+            text-shadow: none;
+        }
+
+        /* Styles for the file input */
+        input[type="file"]::file-selector-button {
+            font-family: 'VT323', monospace;
+            background-color: transparent;
+            border: 1px solid #00FF41;
+            color: #00FF41;
+            padding: 0.5rem 1rem;
+            margin-right: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+        }
+        input[type="file"]::file-selector-button:hover {
+            background-color: #00FF41;
+            color: #000;
+        }
+    </style>
+</head>
+<body class="p-4 sm:p-6 lg:p-8">
+
+    <div class="max-w-screen-2xl mx-auto">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl sm:text-4xl tracking-tight">Multi-Agent System Demo</h1>
+            <p class="mt-2 text-lg">> Live visualization of agent interactions.</p>
+        </header>
+
+        <main class="grid grid-cols-1 lg:grid-cols-5 gap-6">
+
+            <div class="lg:col-span-1 cyber-panel p-4 flex flex-col h-[75vh]">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-700 pb-2">Comms Channel</h2>
+                <div id="chat-window" class="flex-grow overflow-y-auto pr-2 space-y-4">
+                    </div>
+                <form id="chat-form" class="mt-4 flex gap-2">
+                    <input type="text" id="chat-input" placeholder="Enter command..." class="cyber-input flex-grow bg-transparent px-4 py-2 focus:outline-none focus:ring-2 focus:ring-green-500">
+                    <button type="submit" class="cyber-button font-bold py-2 px-4">Transmit</button>
+                </form>
+            </div>
+
+            <div class="lg:col-span-2 cyber-panel p-6 flex flex-col justify-between h-[75vh]">
+                 <div class="flex-grow flex flex-col items-center justify-center relative">
+                    <div class="grid grid-cols-1 gap-8 w-full mx-auto mb-8">
+                        <div id="event-type-user" class="agent-box p-6 text-center">
+                            <h3 class="font-semibold text-lg">User Input</h3>
+                            <p class="text-sm">Initiates requests</p>
+                        </div>
+                        <div id="event-type-remote-agent-call" class="agent-box p-6 text-center">
+                            <h3 class="font-semibold text-lg">Remote Agent Call</h3>
+                            <p class="text-sm">Interaction with Agent/LLM</p>
+                        </div>
+                        <div id="event-type-tool-call" class="agent-box p-6 text-center">
+                            <h3 class="font-semibold text-lg">Tool Call</h3>
+                            <p class="text-sm">Function execution</p>
+                        </div>
+                    </div>
+
+                    <div class="flex justify-center gap-8 w-full mx-auto mb-8">
+                        <div id="from-agent-box" class="agent-box p-4 text-center flex-1">
+                            <h3 class="font-semibold text-md text-gray-400">FROM:</h3>
+                            <p id="from-agent-display" class="text-lg font-bold">NONE</p>
+                        </div>
+                        <div id="to-agent-box" class="agent-box p-4 text-center flex-1">
+                            <h3 class="font-semibold text-md text-gray-400">TO:</h3>
+                            <p id="to-agent-display" class="text-lg font-bold">NONE</p>
+                        </div>
+                    </div>
+
+                    <div id="message-display" class="mt-4 p-4 w-full flex flex-col justify-center shadow-inner min-h-32 max-h-80">
+                        <p>> Waiting for interaction...</p>
+                    </div>
+
+                </div>
+                 <div class="flex justify-center items-center mt-6 space-x-4">
+                    <button id="restart-btn" class="cyber-button py-2 px-5">Restart</button>
+                    <button id="next-step-btn" class="cyber-button py-2 px-5" disabled>Next →</button>
+                </div>
+            </div>
+
+            <div class="lg:col-span-2 cyber-panel p-4" id="event-log-panel">
+                <h2 class="text-xl font-semibold mb-4 border-b border-gray-700 pb-2">Activity Log</h2>
+                <div id="event-log" class="space-y-2">
+                    </div>
+            </div>
+        </main>
+    </div>
+
+    <script>
+        // --- START: Cookie & UUID Functions ---
+
+        /**
+         * Generates a simple Version 4 UUID.
+         */
+        function generateUUID() {
+            return ([1e7]+-1e3+-4e3+-8e3+-1e11).replace(/[018]/g, c =>
+                (c ^ crypto.getRandomValues(new Uint8Array(1))[0] & 15 >> c / 4).toString(16)
+            );
+        }
+
+        /**
+         * Sets a cookie.
+         * @param {string} name - The name of the cookie.
+         * @param {string} value - The value of the cookie.
+         * @param {number} days - Number of days until the cookie expires.
+         */
+        function setCookie(name, value, days) {
+            let expires = "";
+            if (days) {
+                const date = new Date();
+                date.setTime(date.getTime() + (days * 24 * 60 * 60 * 1000));
+                expires = "; expires=" + date.toUTCString();
+            }
+            document.cookie = name + "=" + (value || "") + expires + "; path=/; SameSite=Lax";
+        }
+
+        /**
+         * Gets a cookie by name.
+         * @param {string} name - The name of the cookie.
+         * @returns {string|null} - The cookie value or null if not found.
+         */
+        function getCookie(name) {
+            const nameEQ = name + "=";
+            const ca = document.cookie.split(';');
+            for(let i=0; i < ca.length; i++) {
+                let c = ca[i];
+                while (c.charAt(0) === ' ') c = c.substring(1, c.length);
+                if (c.indexOf(nameEQ) === 0) return c.substring(nameEQ.length, c.length);
+            }
+            return null;
+        }
+
+        // --- END: Cookie & UUID Functions ---
+
+        function generateSimpleId(length = 8) {
+            let result = '';
+            const characters = 'abcdefghijklmnopqrstuvwxyz0123456789';
+            const charactersLength = characters.length;
+            
+            for (let i = 0; i < length; i++) {
+                result += characters.charAt(Math.floor(Math.random() * charactersLength));
+            }
+            
+            return result;
+        }
+        document.addEventListener('DOMContentLoaded', function () {
+            
+            // --- START: User ID Cookie Management ---
+            let currentUserId = getCookie('SOC_user_id');
+            let currentSessionId = getCookie('SOC_session_id');
+            if (!currentUserId) {
+                currentUserId = "USER_"+generateSimpleId(8);
+                setCookie('SOC_user_id', currentUserId, 365); // Set cookie for 1 year
+                console.log('No SOC_user_id cookie found. Set to new value:', currentUserId);
+            } else {
+                console.log('Existing SOC_user_id found:', currentUserId);
+            }
+            if (!currentSessionId) {
+                currentSessionId = null; // Start with null session
+                setCookie('SOC_session_id', currentSessionId, 365); // Set cookie for 1 year
+                console.log('No SOC_user_id cookie found. Set to new value:', currentSessionId);
+            }
+            // --- END: session/User ID Cookie Management ---
+            
+            const socket = io();
+            const chatForm = document.getElementById('chat-form');
+            const chatInput = document.getElementById('chat-input');
+            const chatWindow = document.getElementById('chat-window');
+            const messageDisplay = document.getElementById('message-display');
+            const eventLog = document.getElementById('event-log');
+            
+            const eventTypeUserBox = document.getElementById('event-type-user');
+            const eventTypeToolCallBox = document.getElementById('event-type-tool-call');
+            const eventTypeRemoteAgentCallBox = document.getElementById('event-type-remote-agent-call');
+
+            const fromAgentDisplay = document.getElementById('from-agent-display');
+            const toAgentDisplay = document.getElementById('to-agent-display');
+
+            const nextStepBtn = document.getElementById('next-step-btn');
+            const restartBtn = document.getElementById('restart-btn');
+
+            function calculateSpeed(textLength) {
+                const speed = 95 / (textLength / 10 + 1) + 5;
+                return Math.round(speed);
+            }
+
+            function typewriterEffect(element, text, onComplete = null) {
+                element.innerHTML = "";
+                element.classList.add('typing');
+                let i = 0;
+                const speed = calculateSpeed(text.length);
+
+                let chunkSize = 1;
+                if (text.length > 3000) {
+                    chunkSize = 15;
+                } else if (text.length > 1000) {
+                    chunkSize = 8;
+                } else if (text.length > 500) {
+                    chunkSize = 3;
+                }
+
+                function type() {
+                    if (i < text.length) {
+                        const chunk = text.substring(i, i + chunkSize);
+                        const formattedChunk = chunk.replace(/\n/g, '<br>');
+                        
+                        element.innerHTML += formattedChunk;
+                        i += chunkSize;
+
+                        setTimeout(type, speed);
+                    } else {
+                        element.classList.remove('typing');
+                        if (onComplete) {
+                            onComplete();
+                        }
+                    }
+                }
+                type();
+            }
+
+            function updateLogCursor() {
+                document.querySelectorAll('.log-cursor').forEach(cursor => cursor.remove());
+                const lastLogEntry = eventLog.lastElementChild;
+                if (lastLogEntry) {
+                    const cursorDiv = document.createElement('span');
+                    cursorDiv.className = 'log-cursor';
+                    lastLogEntry.appendChild(cursorDiv);
+                }
+            }
+
+            // --- WebSocket Event Handlers ---
+            socket.on('connect', () => {
+                console.log('Connected to server via WebSocket.');
+                resetUI();
+            });
+
+            socket.on('disconnect', () => {
+                console.log('Disconnected from server.');
+            });
+
+            socket.on('new_step_ready', () => {
+                console.log('Server has a new step ready.');
+                nextStepBtn.disabled = false;
+                restartBtn.style.display = 'inline-block';
+            });
+            
+            socket.on('new_event', (event) => {
+                console.log('Received event:', event);
+                processEvent(event);
+            });
+
+            // --- UI Interaction Handlers ---
+            chatForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                const userQuery = chatInput.value.trim();
+                if (!userQuery || !socket.connected) return;
+                
+                resetVisuals(); 
+                addMessageToChat(userQuery, 'user');
+                chatInput.value = '';
+                
+                try {
+                    const response = await fetch('/chat', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ 
+                            message: userQuery,
+                            user_id: currentUserId,
+                            session_id: currentSessionId
+                        }),
+                    });
+                    if (!response.ok) {
+                        throw new Error(`Server error: ${response.statusText}`);
+                    }
+
+                    const result = await response.json(); // <-- Parse the JSON response
+
+                    // Check if the server sent back a new context_id
+                    if (result.session_id && currentSessionId == null) {
+
+                        currentSessionId = result.session_id; // Update in-memory variable
+                        setCookie('SOC_session_id', result.session_id, 365); // Update the cookie
+                        console.log('Server returned session_id. Cookie updated:', result.session_id);
+                    }
+                    // --- END: Modified Fetch ---
+                } catch (error) {
+                    console.error('Failed to send chat message:', error);
+                    addMessageToChat('Error: Could not send message to the server.', 'bot');
+                }
+            });
+
+            nextStepBtn.addEventListener('click', async () => {
+                try {
+                    const response = await fetch('/next_event', { method: 'POST' });
+                    const result = await response.json();
+                    if(result.status === 'event sent') {
+                        nextStepBtn.disabled = !result.has_more_events;
+                    } else {
+                         nextStepBtn.disabled = true;
+                    }
+                } catch (error) {
+                    console.error('Failed to fetch next event:', error);
+                    nextStepBtn.disabled = true;
+                }
+            });
+            
+            restartBtn.addEventListener('click', () => {
+                setCookie('SOC_session_id', null, 365); // <-- SET cookie to 'none'
+                setCookie('SOC_user_id', null, 365);
+                console.log('Restart pressed. Cookie set to "null".');
+                location.reload();
+            });
+
+            // --- UI Helper Functions ---
+            function getEventTypeBoxElementForEventField(eventField) {
+                if (eventField === 'User Input') return eventTypeUserBox;
+                if (eventField === 'Tool Call') return eventTypeToolCallBox;
+                if (eventField === 'Remote Agent Call') return eventTypeRemoteAgentCallBox;
+                return null;
+            }
+
+            function processEvent(event) {
+                if (event.final) {
+                    addMessageToChat(event.message, 'bot');
+                    //resetVisuals();
+                    addEventToLog(event);
+                    return;
+                }
+
+                resetVisuals(); 
+                
+                typewriterEffect(fromAgentDisplay, event.from.toUpperCase());
+                typewriterEffect(toAgentDisplay, event.to.toUpperCase());
+                
+                const mainEventTypeBoxToLight = getEventTypeBoxElementForEventField(event.event);
+                if (mainEventTypeBoxToLight) {
+                    mainEventTypeBoxToLight.classList.add('active-caller');
+                }
+                
+                typewriterEffect(messageDisplay, event.message);
+
+                addEventToLog(event);
+            }
+            
+            function addMessageToChat(message, sender) {
+                const bubble = document.createElement('div');
+                const isSignedUrl = sender === 'bot' && message.startsWith('https://storage.googleapis.com/');
+
+                if (isSignedUrl) {
+                    // This is a signed URL, so create the upload interface instead of a message bubble.
+                    createUploadInterface(message);
+                } else {
+                    // This is a regular message.
+                    bubble.className = `w-fit max-w-[80%] px-4 py-2 rounded-lg ${sender === 'user' ? 'chat-bubble-user self-end' : 'chat-bubble-bot self-start'}`;
+                    if (sender === 'bot') {
+                        typewriterEffect(bubble, message);
+                    } else {
+                        bubble.textContent = message;
+                    }
+                    chatWindow.appendChild(bubble);
+                }
+                
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+            }
+            
+            function createUploadInterface(signedUrl) {
+                // ... (The code that creates the HTML elements remains the same) ...
+                const uploadContainer = document.createElement('div');
+                uploadContainer.className = 'chat-bubble-bot self-start p-4 space-y-3';
+                const promptMessage = document.createElement('p');
+                typewriterEffect(promptMessage, "Please upload your file.");
+                uploadContainer.appendChild(promptMessage);
+                const fileInput = document.createElement('input');
+                fileInput.type = 'file';
+                fileInput.className = 'cyber-input w-full text-sm';
+                uploadContainer.appendChild(fileInput);
+                const uploadButton = document.createElement('button');
+                uploadButton.textContent = 'Upload';
+                uploadButton.className = 'cyber-button py-1 px-4';
+                uploadContainer.appendChild(uploadButton);
+                const statusMessage = document.createElement('p');
+                statusMessage.className = 'text-sm';
+                uploadContainer.appendChild(statusMessage);
+                chatWindow.appendChild(uploadContainer);
+                chatWindow.scrollTop = chatWindow.scrollHeight;
+
+                uploadButton.addEventListener('click', async () => {
+                    const file = fileInput.files[0];
+                    if (!file) { statusMessage.textContent = '> Error: No file selected.'; return; }
+                    
+                    // --- Direct Upload Process with Debugging ---
+                    try {
+                        fileInput.disabled = true;
+                        uploadButton.disabled = true;
+
+                        statusMessage.textContent = '> Uploading file...';
+                        console.log('--- DEBUG: UPLOADING FILE (Direct PUT) ---');
+                        console.log('URL:', signedUrl);
+                        
+                        // This header MUST EXACTLY MATCH the one used on your Python backend
+                        const uploadHeaders = { 'Content-Type': 'application/octet-stream' };
+                        console.log('Headers being sent:', uploadHeaders);
+
+                        const uploadResponse = await fetch(signedUrl, {
+                            method: 'PUT',
+                            headers: uploadHeaders,
+                            body: file
+                        });
+                        
+                        console.log('--- DEBUG: Upload Response Received ---');
+                        console.log('Status:', uploadResponse.status, uploadResponse.statusText);
+                        
+                        if (uploadResponse.ok) {
+                            console.log('--- DEBUG: Upload Successful! ---');
+                            addMessageToChat("It might take a few moments for the file to process.", "bot");
+                            uploadContainer.remove();
+                            
+
+
+
+                            try {
+                                const response = await fetch('/chat', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type': 'application/json' },
+                                    body: JSON.stringify({ 
+                                        message: "File uploaded.",
+                                        user_id: currentUserId,
+                                        session_id: currentSessionId
+                                    }),
+                                });
+                                if (!response.ok) {
+                                    throw new Error(`Server error: ${response.statusText}`);
+                                }
+
+                                const result = await response.json(); // <-- Parse the JSON response
+
+                                // Check if the server sent back a new context_id
+                                if (result.session_id && currentSessionId == null) {
+
+                                    currentSessionId = result.session_id; // Update in-memory variable
+                                    setCookie('SOC_session_id', result.session_id, 365); // Update the cookie
+                                    console.log('Server returned session_id. Cookie updated:', result.session_id);
+                                }
+                                // --- END: Modified Fetch ---
+                            } catch (error) {
+                                console.error('Failed to send chat message:', error);
+                                addMessageToChat('Error: Could not send message to the server.', 'bot');
+                            };
+
+
+
+
+
+                            
+                        } else {
+                            // Log the actual error response text from GCS
+                            const responseText = await uploadResponse.text();
+                            console.error('Upload Error Body from GCS:', responseText);
+                            throw new Error(`Upload failed with status: ${uploadResponse.status}`);
+                        }
+
+                    } catch (error) {
+                        console.error('--- DEBUG: CATCH BLOCK ERROR ---', error);
+                        statusMessage.textContent = `> Error: See console for details.`;
+                        fileInput.disabled = false;
+                        uploadButton.disabled = false;
+                    }
+                });
+            }
+
+            function addEventToLog(event) {
+                document.querySelectorAll('.log-cursor').forEach(cursor => cursor.remove());
+
+                const logEntry = document.createElement('div');
+                logEntry.className = 'log-entry p-1';
+                const timestamp = new Date().toLocaleTimeString();
+                
+                let eventTypeColor = 'text-blue-400';
+                if (event.event === 'User Input') eventTypeColor = 'text-green-400';
+                else if (event.event === 'Tool Call') eventTypeColor = 'text-yellow-400';
+                else if (event.event === 'Remote Agent Call') eventTypeColor = 'text-purple-400';
+
+                logEntry.innerHTML = `
+                    <div class="timestamp">${timestamp}</div>
+                    <div>
+                        <span class="font-semibold ${eventTypeColor} log-title">${event.event}</span>: 
+                        <span class="font-semibold log-title">${event.from.toUpperCase()}</span> 
+                        <span class="">--></span> 
+                        <span class="font-semibold log-title">${event.to.toUpperCase()}</span>
+                    </div>
+                    <div class="message-content"></div>
+                `;
+                eventLog.appendChild(logEntry);
+                
+                const messageContentEl = logEntry.querySelector('.message-content');
+                typewriterEffect(messageContentEl, event.message, updateLogCursor);
+
+                eventLog.scrollTop = eventLog.scrollHeight;
+            }
+            
+            function resetVisuals() {
+                [eventTypeUserBox, eventTypeToolCallBox, eventTypeRemoteAgentCallBox].forEach(box => {
+                    box.classList.remove('active-caller', 'active-called');
+                });
+                fromAgentDisplay.textContent = 'NONE';
+                toAgentDisplay.textContent = 'NONE';
+                messageDisplay.innerHTML = '<p>> Waiting for interaction...</p>';
+                updateLogCursor();
+            }
+
+            function resetContext(){
+                try {
+                    const response = fetch('/reset', { method: 'POST' });
+                    const result = response.json();
+                    if(result.status === 'reset successful') {
+                        // success
+                    } else {
+                         // failure
+                    }
+                } catch (error) {
+                    console.error('Failed to reset context:', error);
+                }
+            }
+
+            function resetUI() {
+                resetVisuals();
+                nextStepBtn.disabled = true;
+                restartBtn.style.display = 'none';
+                chatWindow.innerHTML = '';
+                eventLog.innerHTML = '';
+                resetContext();
+                updateLogCursor();
+            }
+
+            updateLogCursor();
+        });
+    </script>
+
+</body>
+</html>

@@ -1,0 +1,20 @@
+{
+  "name": "chat_agent",
+  "description": "This agent assists with security related events",
+  "url": "http://localhost:10002/",
+  "supportsAuthenticatedExtendedCard": true,
+  "provider": null,
+  "security": null,
+  "securitySchemes": null,
+  "signatures": null,
+  "preferredTransport": "HTTP+JSON",
+  "version": "1.0.0",
+  "defaultInputModes": ["text/plain"],
+  "defaultOutputModes": ["text/plain"],
+  "capabilities": {
+    "streaming": false
+  },
+  "skills": [
+    
+  ]
+}

@@ -1,0 +1,27 @@
+{
+  "name": "incident_response_agent",
+  "description": "An agent for incident response operations, capable of deleting files (with user approval), quarantining files, blocking IP addresses, and other mitigation actions.",
+  "url": "http://localhost:8001/",
+  "version": "1.0.0",
+  "supportsAuthenticatedExtendedCard": true,
+  "provider": null,
+  "security": null,
+  "securitySchemes": null,
+  "signatures": null,
+  "preferredTransport": "HTTP+JSON",
+  "defaultInputModes": ["text", "application/json"],
+  "defaultOutputModes": ["application/json", "text"],
+  "capabilities": {},
+  "skills": [
+    {
+      "id": "create_snort_rule",
+      "name": "Create Snort Rule",
+      "description": "Generates a Snort rule string from the provided components.",
+      "tags": ["Incident Response", "Rule Generation", "snort"],
+      "examples": [
+        "The user has asked to create a snort rule in response to the incident",
+        "Create a rule to block future attacks"
+      ]
+    }
+  ]
+}

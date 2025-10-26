@@ -1,0 +1,7 @@
+fastapi
+uvicorn[standard]
+python-socketio
+httpx
+google-adk
+google-adk[a2a]
+a2a-sdk>=0.3.4

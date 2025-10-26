@@ -1,0 +1,96 @@
+{
+  "name": "gti_agent",
+  "description": "An agent for Threat Intelligence operations using Google Threat Intelligence.",
+  "url": "http://localhost:8001/",
+  "version": "1.0.0",
+  "supportsAuthenticatedExtendedCard": true,
+  "provider": null,
+  "security": null,
+  "securitySchemes": null,
+  "signatures": null,
+  "preferredTransport": "HTTP+JSON",
+  "defaultInputModes": [
+    "text","text/plain"
+  ],
+  "defaultOutputModes": [
+    "text","text/plain"
+  ],
+  "capabilities": {
+    "streaming": false
+  },
+  "skills": [
+    {
+      "id": "threat_intelligence",
+      "name": "Threat Intelligence",
+      "description": "Provides threat intelligence from the Google Threat Intelligence platform. It can search for and retrieve information about threat actors, malware, campaigns, vulnerabilities, and reports.",
+      "tags": [
+        "Threat Intelligence",
+        "Security"
+      ],
+      "examples": [
+        "Search for reports on the latest ransomware trends.",
+        "Get a report on the threat actor known as 'APT28'.",
+        "What are the latest threats targeting the financial industry?"
+      ]
+    },
+    {
+      "id": "ioc_analysis",
+      "name": "IOC Analysis",
+      "description": "Analyzes Indicators of Compromise (IOCs) such as files, domains, IP addresses, and URLs. It provides detailed reports and relationships to other entities.",
+      "tags": [
+        "IOC",
+        "Analysis",
+        "Security"
+      ],
+      "examples": [
+        "Analyze the file with hash 'e4d909c290d0fb1ca068ffaddf22cbd0'.",
+        "Get a report on the domain 'example.com'.",
+        "What are the resolutions for the IP address '8.8.8.8'?"
+      ]
+    },
+    {
+      "id": "collection_management",
+      "name": "Collection Management",
+      "description": "Manages collections of IOCs. It can create, update, and modify collections of threat intelligence.",
+      "tags": [
+        "Collection",
+        "IOC",
+        "Security"
+      ],
+      "examples": [
+        "Create a new collection of IOCs related to the 'SolarWinds' campaign.",
+        "Add the domain 'evil.com' to the collection 'My Malware'.",
+        "Update the description of the collection 'My Malware'."
+      ]
+    },
+    {
+      "id": "threat_hunting",
+      "name": "Threat Hunting",
+      "description": "Hunts for threats using Digital Threat Monitoring (DTM) and YARA rules. It can search for documents and examine hunting rulesets.",
+      "tags": [
+        "Hunting",
+        "Security",
+        "DTM",
+        "YARA"
+      ],
+      "examples": [
+        "Search for documents in DTM related to 'my-company.com'.",
+        "Get the YARA rules for the ruleset 'my_rules'."
+      ]
+    },
+    {
+        "id": "threat_profiles",
+        "name": "Threat Profiles",
+        "description": "Manages personalized Threat Profiles. It can list, view, and get recommendations from threat profiles to focus on relevant threats.",
+        "tags": [
+          "Threat Profile",
+          "Security"
+        ],
+        "examples": [
+          "What are the latest threats targeting the financial industry?",
+          "List my threat profiles.",
+          "Get the recommendations for the threat profile 'my_profile'."
+        ]
+      }
+  ]
+}

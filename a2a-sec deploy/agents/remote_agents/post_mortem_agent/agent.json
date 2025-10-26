@@ -1,0 +1,38 @@
+{
+  "name": "post_mortem_agent",
+  "description": "An agent for generating structured and comprehensive post mortem reports about cyber attacks and incidents. The agent can also create YARA rule files for new incidents using incident context and IOCs.",
+  "url": "http://localhost:8001/",
+  "supportsAuthenticatedExtendedCard": true,
+  "provider": null,
+  "security": null,
+  "securitySchemes": null,
+  "signatures": null,
+  "preferredTransport": "HTTP+JSON",
+  "version": "1.0.0",
+  "defaultInputModes": ["text", "application/json"],
+  "defaultOutputModes": ["application/json", "text"],
+  "capabilities": {},
+  "skills": [
+    {
+      "id": "generate_post_mortem_report",
+      "name": "Generate Post Mortem Report",
+      "description": "Generates a structured and comprehensive post mortem report for a cyber attack or incident, including incident name, date, summary, impact, timeline, root cause, mitigation, lessons learned, and recommendations.",
+      "tags": ["Post Mortem", "Incident Response", "Reporting", "Security"],
+      "examples": [
+        "Generate a post mortem report for the ransomware attack on 2025-08-13.",
+        "Create a comprehensive incident report for the phishing incident affecting the finance department.",
+        "Summarize the lessons learned from the recent DDoS attack."
+      ]
+    },
+    {
+      "id": "create_yara_rule",
+      "name": "Create YARA Rule",
+      "description": "Creates a YARA rule file based on incident details if the incident is new. The rule uses incident context and IOCs to generate a basic YARA file.",
+      "tags": ["YARA", "Detection", "Incident Response", "Security"],
+      "examples": [
+        "Create a YARA rule for the new malware discovered in the August 2025 breach.",
+        "Generate a detection rule for the phishing campaign described in the incident report."
+      ]
+    }
+  ]
+}
