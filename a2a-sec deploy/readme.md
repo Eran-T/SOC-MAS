@@ -161,6 +161,7 @@ source ./deploy_all.sh --start-from 3
 ```
 
 Project Structure (Relevant Files)
+```
 .
 ├── .env                  # Your local configuration (created from .env.example)
 ├── .env.example          # Template for the environment file
@@ -183,6 +184,7 @@ Project Structure (Relevant Files)
 │   └── incident_response_agent/
 │
 └── deployment/file-processor/ # Source for the File Processing Cloud Function
+```
 🧹 Cleaning Up
 To delete all the Google Cloud resources created by this deployment, use the provided cleanup script. This script reads the resource names from your .env file.
 WARNING: This action is irreversible and will delete all deployed services, agents, buckets (and their contents), and service accounts.
