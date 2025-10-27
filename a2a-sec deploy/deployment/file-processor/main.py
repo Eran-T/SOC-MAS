@@ -25,7 +25,8 @@ def get_disassembled_content(file_content: bytes) -> str:
         instructions = md.disasm(file_content, 0x1000) # 0x1000 is a conventional starting address
 
         for i in instructions:
-            line = f"0x{i.address:x}:\t{i.mnemonic}\t{i.op_str}"
+            hex_bytes = " ".join([f"{b:02x}" for b in i.bytes])
+            line = f"0x{i.address:x}:\t{hex_bytes:<24}\t{i.mnemonic}\t{i.op_str}"
             disassembled_lines.append(line)
         
         if not disassembled_lines:
