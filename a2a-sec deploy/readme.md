@@ -190,13 +190,15 @@ To delete all the Google Cloud resources created by this deployment, use the pro
 WARNING: This action is irreversible and will delete all deployed services, agents, buckets (and their contents), and service accounts.
 
 Make the script executable (if needed):
-Bash
+```Bash
 
 chmod +x cleanup_deployment.sh
+```
 Run the script:
-Bash
+``` Bash
 
 ./cleanup_deployment.sh
+```
 Confirm the Prompt: Carefully review the list of resources that will be deleted and type y to confirm.
 The script will then proceed to delete each resource using gcloud commands.
     
