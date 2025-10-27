@@ -6,7 +6,7 @@ The system includes a complete backend for file processing, allowing users to up
 
 
 
-![Architecture Diagram]([https://placehold.co/800x400/eeeeee/999999?text=Architecture+Diagram](https://github.com/Eran-T/SOC-MAS/blob/main/a2a-sec%20deploy/assets/SOC%20MAS.png))
+![Architecture Diagram](https://github.com/Eran-T/SOC-MAS/blob/main/a2a-sec%20deploy/assets/SOC%20MAS.png)
 
 
 ## Architecture
