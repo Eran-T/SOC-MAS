@@ -1,5 +1,11 @@
 # Multi-Agent Security Orchestration Platform
 
+⚠️ **Important Notice: This is a Demo Project**
+Please be aware that this project is a demonstration and is not intended for production environments.
+
+It is designed to showcase specific features or concepts and lacks the comprehensive testing, error handling, security measures, and scalability required for a live application. Using this code in production is strongly discouraged and done at your own risk.
+
+
 This project deploys a comprehensive, multi-agent system on Google Cloud designed for security orchestration. It features a web-based chat interface where an operator can manage a security incident workflow. A central **Orchestrator Agent** delegates tasks like threat intelligence, malware analysis, and post-mortem reporting to a team of specialized, remote AI agents running on Vertex AI.
 
 The system includes a complete backend for file processing, allowing users to upload suspicious files, which are then automatically disassembled and hashed for analysis by the agent network.
