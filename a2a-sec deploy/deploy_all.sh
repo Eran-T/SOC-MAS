@@ -195,6 +195,8 @@ fi
 
 if (( START_STEP == 1 )); then
     echo -e "\n🏁 All deployments and setups have been processed."
+    echo "✅ Application deployed succefully.\naccess it from: ${SERVICE_URL}"
 else
     echo -e "\n🏁 All deployments and setups from PART ${START_STEP} onwards have been processed."
+    echo "✅ Application deployed succefully.\naccess it from: ${SERVICE_URL}"
 fi
