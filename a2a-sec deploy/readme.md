@@ -157,6 +157,9 @@ source ./deploy_all.sh
 The script will proceed through 6 parts, deploying the frontend, all agents, and the file handling backend. It will print progress and save resource names to your `.env` file.
 Upon successful completion, the public URL of your frontend service will be printed.
 
+### Accessing the application:
+You can access your application through the deployed Cloud Run service (populated value of service_url in .env).
+
 ### Resuming Deployment (Optional)
 If the deployment script fails midway, you can attempt to resume it from a specific part using the `--start-from` flag (remember to use `source`):
 
@@ -207,4 +210,3 @@ Run the script:
 ```
 Confirm the Prompt: Carefully review the list of resources that will be deleted and type y to confirm.
 The script will then proceed to delete each resource using gcloud commands.
-    
