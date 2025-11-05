@@ -69,8 +69,8 @@ This project is deployed using a series of shell scripts orchestrated by `deploy
 ### Step 1: Clone the Repository (If necessary)
 
 ```bash
-git clone <your-repo-url>
-cd a2a-sec-deploy
+git clone https://github.com/Eran-T/SOC-MAS.git
+cd SOC-MAS/a2a-sec-deploy
 ```
 
 ### Step 2: Create and Activate a Python Virtual Environment
