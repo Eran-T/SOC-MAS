@@ -53,11 +53,11 @@ class MyVertexAiSessionService(VertexAiSessionService):
             print(f"❌❌❌❌❌❌❌ exception in : {e},",  file=sys.stderr)
             return None
 
-# runner = Runner(
-#     app_name="gti_agent",
-#     agent=root_agent,
-#     session_service=VertexAiSessionService(project=GOOGLE_CLOUD_PROJECT, location=LOCATION),
-# )
+runner = Runner(
+    app_name="gti_agent",
+    agent=root_agent,
+    session_service=VertexAiSessionService(project=GOOGLE_CLOUD_PROJECT, location=LOCATION),
+)
 
 from google.adk.a2a.executor.a2a_agent_executor import A2aAgentExecutor
 from vertexai.preview.reasoning_engines import A2aAgent
@@ -127,4 +127,4 @@ remote_app = agent_engines.update(
     },
 )
 
-
+print(remote_app.resource_name)
