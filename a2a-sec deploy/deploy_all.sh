@@ -122,7 +122,7 @@ if (( START_STEP <= 3 )); then
     echo "============================================================"
     if [ -z "$PROJECT_NUMBER" ]; then echo "❌ Error: PROJECT_NUMBER not set. Please run PART 1 first."; return 1; fi
     REMOTE_AGENTS_BASE_DIR="agents/remote_agents"
-    AGENTS_TO_DEPLOY=("malware_analysis_agent") # "post_mortem_agent" "incident_response_agent")
+    AGENTS_TO_DEPLOY=("malware_analysis_agent" "post_mortem_agent" "incident_response_agent")
     for AGENT_NAME in "${AGENTS_TO_DEPLOY[@]}"; do
         echo "------------------------------------------------------------"
         echo "--- Preparing staging bucket for ${AGENT_NAME} ---"
