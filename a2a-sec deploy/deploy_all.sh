@@ -146,7 +146,7 @@ if (( START_STEP <= 3 )); then
 fi
 
 
-# --- PART 43: DEPLOY CHAT AGENT ---
+# --- PART 4: DEPLOY CHAT AGENT ---
 if (( START_STEP <= 4 )); then
     export SA_NAME="${FILE_HANDLER_SERVICE_ACCOUNT_NAME}"
     export SA_EMAIL="${SA_NAME}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
