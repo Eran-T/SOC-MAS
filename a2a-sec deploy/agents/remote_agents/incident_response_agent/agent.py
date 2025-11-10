@@ -219,5 +219,5 @@ root_agent = LlmAgent(
     instruction="""""",
     tools=[],
     generate_content_config=None,
-    before_tool_callback=send_event_to_frontend
+    before_tool_callback=simple_before_tool_modifier
 )
