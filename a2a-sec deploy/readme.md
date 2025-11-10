@@ -144,7 +144,7 @@ This script coordinates all deployment steps. It must be run using `source` so t
 # Make the script executable (if needed)
 chmod +x deploy_all.sh deploy.sh deploy_backend_file_handling.sh agents/remote_agents/gti_agent/installation_scripts/install.sh
 # Run the master script using "source"
-source ./deploy_all.sh
+./deploy_all.sh
 ```
 
 The script will proceed through 6 parts, deploying the frontend, all agents, and the file handling backend. It will print progress and save resource names to your `.env` file.
