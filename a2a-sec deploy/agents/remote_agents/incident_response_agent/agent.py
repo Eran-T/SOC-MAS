@@ -208,16 +208,3 @@ Your responses should be clear, concise, and actionable. Always include the acti
     generate_content_config=None,
     before_tool_callback=simple_before_tool_modifier
 )
-
-
-
-
-
-root_agent = LlmAgent(
-    model="gemini-2.5-flash",
-    name="ecom_agent",
-    instruction="""""",
-    tools=[],
-    generate_content_config=None,
-    before_tool_callback=simple_before_tool_modifier
-)
