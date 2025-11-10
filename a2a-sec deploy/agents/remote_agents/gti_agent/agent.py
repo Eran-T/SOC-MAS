@@ -204,11 +204,6 @@ You have access to the following tools to execute your tasks. You must select th
                             command="uvx",
                             args= [
                                 "gti_mcp"
-                                # "--directory",
-                                # NAV_DIR,
-                                # #"/home/admin_/a2a-sec/agents/remote_agents/gti_agent/mcp-security/server/gti/gti_mcp",
-                                # "run",
-                                # "server.py"
                             ],
                             env={
                                 "VT_APIKEY": GTI_API_KEY
