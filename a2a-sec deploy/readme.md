@@ -94,13 +94,6 @@ Install the necessary Python packages for the deployment scripts and agents.
 pip install -r requirements.txt
 ```
 
-### Step 4: Configure Environment (.env)
-Copy the example configuration file and edit it to match your environment.
-
-```bash
-cp .env.example .env
-```
-
 Now, open `.env` in a text editor and fill in all the variables under `# --- User-Provided Variables ---`:
 
 * `GOOGLE_CLOUD_PROJECT`: Your Google Cloud Project ID.
@@ -173,7 +166,6 @@ Project Structure (Relevant Files)
 ```
 .
 ├── .env                  # Your local configuration (created from .env.example)
-├── .env.example          # Template for the environment file
 ├── deploy_all.sh         # Master deployment script (run this)
 ├── deploy.sh             # Helper: Deploys a single generic agent via deploy.py
 ├── deploy.py             # Helper: Python logic for Vertex AI deployment
