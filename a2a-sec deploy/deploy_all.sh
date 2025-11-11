@@ -166,6 +166,9 @@ fi
 
 # --- PART 5: DEPLOY CHAT AGENT ---
 if (( START_STEP <= 5 )); then
+    export BUCKET_UPLOAD_NAME="${PROJECT_NUMBER}-${UPLOAD_BUCKET}"
+    export BUCKET_DOWNLOAD_NAME="${PROJECT_NUMBER}-${DOWNLOAD_BUCKET}"
+    export CHAT_AGENT_RESOURCE_NAME="${CHAT_AGENT_RESOURCE_NAME:-'pleaceholder'}"
     export SA_NAME="${FILE_HANDLER_SERVICE_ACCOUNT_NAME}"
     export SA_EMAIL="${SA_NAME}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
     echo -e "\n============================================================"
