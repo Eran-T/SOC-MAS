@@ -78,7 +78,6 @@ remote_app = agent_engines.create(
             "requests",
             "httpx",
             "google-adk == 1.17.0"
-
     ],
     env_vars = {
          "GTI_API_KEY": GTI_API_KEY,
