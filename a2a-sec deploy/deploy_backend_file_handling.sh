@@ -29,6 +29,14 @@ fi
 
 echo "--- Starting Deployment for project: ${GOOGLE_CLOUD_PROJECT} ---"
 
+# --- REQUIRED: Enable APIs and wait for propagation ---
+echo -e "\n[Prerequisite] Enabling required APIs: Cloud Run and Eventarc..."
+gcloud services enable run.googleapis.com \
+                       eventarc.googleapis.com \
+                       --project=${GOOGLE_CLOUD_PROJECT}
+
+sleep 5
+
 # --- Step 1: Create Cloud Storage Buckets ---
 echo -e "\n[Step 1/5] Creating Cloud Storage buckets..."
 export BUCKET_UPLOAD_NAME="${PROJECT_NUMBER}-${UPLOAD_BUCKET}"
