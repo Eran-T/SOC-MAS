@@ -27,6 +27,11 @@ update_config() {
     python3 update_env.py "$key" "$value"
 }
 
+# Use `set -a` to automatically export all variables sourced from the .env file.
+# This ensures that child processes (like python scripts) inherit them.
+set -a
+source "$CONFIG_FILE"
+set +a # Disable auto-exporting after sourcing
 
 # Source the configuration file
 source "$CONFIG_FILE"
