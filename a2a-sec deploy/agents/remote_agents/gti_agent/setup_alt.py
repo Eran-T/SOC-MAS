@@ -72,11 +72,13 @@ remote_app = agent_engines.create(
     agent_engine=a2a_agent,
     display_name='gti_agent',
     requirements=[
-        "google-cloud-aiplatform[agent_engines,adk]>=1.112.0",
-        "google-cloud-discoveryengine",
-        "a2a-sdk >= 0.3.4",
-        "requests",
-        "httpx"
+            "google-cloud-aiplatform[agent_engines,adk]>=1.112.0",
+            "google-cloud-discoveryengine == 0.13.12",
+            "a2a-sdk >= 0.3.4",
+            "requests",
+            "httpx",
+            "google-adk == 1.17.0"
+
     ],
     env_vars = {
          "GTI_API_KEY": GTI_API_KEY,
