@@ -217,10 +217,12 @@ def deploy_agent(agent_name: str, base_dir: str, env_vars_str):
         display_name=agent_name,
         requirements=[
             "google-cloud-aiplatform[agent_engines,adk]>=1.112.0",
-            "google-cloud-discoveryengine",
+            "google-cloud-discoveryengine == 0.13.12",
             "a2a-sdk >= 0.3.4",
             "requests",
-            "httpx"
+            "httpx",
+            "google-adk == 1.17.0"
+
         ],
         env_vars=env_vars_to_pass,
         # Now that the local import creates the correct full module path, we can
