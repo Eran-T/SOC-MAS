@@ -164,7 +164,7 @@ if (( START_STEP <= 5 )); then
     export SA_NAME="${FILE_HANDLER_SERVICE_ACCOUNT_NAME}"
     export SA_EMAIL="${SA_NAME}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
     echo -e "\n============================================================"
-    echo "🎬 PART 4: Deploying the Chat Agent"
+    echo "🎬 PART 5: Deploying the Chat Agent"
     echo "============================================================"
     if [ -z "$PROJECT_NUMBER" ]; then echo "❌ Error: PROJECT_NUMBER not set. Please run PART 1 first."; return 1; fi
     if [ -z "$GTI_AGENT_RESOURCE_NAME" ]; then echo "❌ Error: Tooling agent resource names not set. Please run previous parts."; return 1; fi
@@ -178,7 +178,7 @@ fi
 # --- PART 6: UPDATE FRONTEND WITH CHAT AGENT URL ---
 if (( START_STEP <= 6 )); then
     echo -e "\n============================================================"
-    echo "🎬 PART 5: Updating Frontend with Chat Agent URL"
+    echo "🎬 PART 6: Updating Frontend with Chat Agent URL"
     echo "============================================================"
     if [ -z "$CHAT_AGENT_RESOURCE_NAME" ]; then echo "❌ Error: CHAT_AGENT_RESOURCE_NAME not set. Please run PART 5 first."; return 1; fi
     CHAT_AGENT_SERVER_URL="https://${REGION}-aiplatform.googleapis.com/v1beta1/${CHAT_AGENT_RESOURCE_NAME}/a2a"
