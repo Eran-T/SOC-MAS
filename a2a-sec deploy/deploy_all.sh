@@ -145,9 +145,22 @@ if (( START_STEP <= 3 )); then
     done
 fi
 
-
-# --- PART 4: DEPLOY CHAT AGENT ---
+# --- PART 4: RUN FILE HANDLING BACKEND SCRIPT ---
 if (( START_STEP <= 4 )); then
+    echo -e "\n============================================================"
+    echo "🎬 PART 4: Running File Handling Backend Script"
+    echo "============================================================"
+    FILE_HANDLING_SCRIPT="deploy_backend_file_handling.sh"
+    if [ -f "$FILE_HANDLING_SCRIPT" ]; then
+        source ./${FILE_HANDLING_SCRIPT}
+        echo "✅ File Handling Backend script finished."
+    else
+        echo "⚠️  Warning: ${FILE_HANDLING_SCRIPT} not found. Skipping."
+    fi
+fi
+
+# --- PART 5: DEPLOY CHAT AGENT ---
+if (( START_STEP <= 5 )); then
     export SA_NAME="${FILE_HANDLER_SERVICE_ACCOUNT_NAME}"
     export SA_EMAIL="${SA_NAME}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
     echo -e "\n============================================================"
@@ -162,8 +175,8 @@ if (( START_STEP <= 4 )); then
     echo "✅ Chat agent deployment complete. Resource name saved."
 fi
 
-# --- PART 5: UPDATE FRONTEND WITH CHAT AGENT URL ---
-if (( START_STEP <= 5 )); then
+# --- PART 6: UPDATE FRONTEND WITH CHAT AGENT URL ---
+if (( START_STEP <= 6 )); then
     echo -e "\n============================================================"
     echo "🎬 PART 5: Updating Frontend with Chat Agent URL"
     echo "============================================================"
@@ -179,19 +192,7 @@ if (( START_STEP <= 5 )); then
     echo "✅ Frontend service updated successfully."
 fi
 
-# --- PART 6: RUN FILE HANDLING BACKEND SCRIPT ---
-if (( START_STEP <= 6 )); then
-    echo -e "\n============================================================"
-    echo "🎬 PART 6: Running File Handling Backend Script"
-    echo "============================================================"
-    FILE_HANDLING_SCRIPT="deploy_backend_file_handling.sh"
-    if [ -f "$FILE_HANDLING_SCRIPT" ]; then
-        source ./${FILE_HANDLING_SCRIPT}
-        echo "✅ File Handling Backend script finished."
-    else
-        echo "⚠️  Warning: ${FILE_HANDLING_SCRIPT} not found. Skipping."
-    fi
-fi
+
 
 if (( START_STEP == 1 )); then
     echo -e "\n🏁 All deployments and setups have been processed."
