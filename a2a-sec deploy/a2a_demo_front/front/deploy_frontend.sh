@@ -38,6 +38,7 @@ export DEPLOYING_USER=$(gcloud config get-value account)
 gcloud iam service-accounts add-iam-policy-binding ${SA_EMAIL} --member="user:${DEPLOYING_USER}" --role="roles/iam.serviceAccountUser" --project=${GOOGLE_CLOUD_PROJECT} --condition=None
 gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${SA_EMAIL}" --role="roles/aiplatform.user" --condition=None
 gcloud iam service-accounts add-iam-policy-binding ${SA_EMAIL} --member="serviceAccount:${SA_EMAIL}" --role="roles/iam.serviceAccountTokenCreator" --condition=None
+gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${SA_EMAIL}" --role="roles/logging.logWriter" --condition=None
 
 echo "--- 4. Creating Artifact Registry repository (if it doesn't exist) ---"
 # Check if the repository exists and create it if it doesn't.
