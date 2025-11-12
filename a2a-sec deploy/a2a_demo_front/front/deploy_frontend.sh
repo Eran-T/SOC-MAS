@@ -8,7 +8,7 @@ set -e
 export REPOSITORY="soc-agent-images"
 # The full URI for the container image
 export IMAGE_URI="${REGION}-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/${REPOSITORY}/${SERVICE_NAME}:latest"
-
+export DEFAULT_SA_EMAIL="${PROJECT_NUMBER}-compute@developer.gserviceaccount.com"
 # --- Script ---
 
 echo "--- 1. Enabling Google Cloud services ---"
@@ -18,6 +18,8 @@ gcloud services enable \
   cloudbuild.googleapis.com \
   run.googleapis.com \
   eventarc.googleapis.com \
+  aiplatform.googleapis.com \
+  cloudfunctions.googleapis.com \
   --project=${GOOGLE_CLOUD_PROJECT}
 
   
@@ -33,12 +35,20 @@ gcloud iam service-accounts create ${SA_NAME} \
     --description="Service account for the Eventarc file processing function" \
     --project=${GOOGLE_CLOUD_PROJECT} || echo "Service account '${SA_NAME}' already exists."
 
-echo "--- 3. Grant the deploying user permission to act as the service accounts ---"
+sleep 5
+
+
+echo "--- 3. Grant the deploying user permission to act as the service accounts ${GOOGLE_CLOUD_PROJECT}---"
 export DEPLOYING_USER=$(gcloud config get-value account)
 gcloud iam service-accounts add-iam-policy-binding ${SA_EMAIL} --member="user:${DEPLOYING_USER}" --role="roles/iam.serviceAccountUser" --project=${GOOGLE_CLOUD_PROJECT} --condition=None
 gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${SA_EMAIL}" --role="roles/aiplatform.user" --condition=None
-gcloud iam service-accounts add-iam-policy-binding ${SA_EMAIL} --member="serviceAccount:${SA_EMAIL}" --role="roles/iam.serviceAccountTokenCreator" --condition=None
-gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${SA_EMAIL}" --role="roles/logging.logWriter" --condition=None
+gcloud iam service-accounts add-iam-policy-binding ${SA_EMAIL} --member="serviceAccount:${SA_EMAIL}" --role="roles/iam.serviceAccountTokenCreator" --project=${GOOGLE_CLOUD_PROJECT} --condition=None
+gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${DEFAULT_SA_EMAIL}" --role="roles/logging.logWriter" --project=${GOOGLE_CLOUD_PROJECT} --condition=None
+gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${DEFAULT_SA_EMAIL}" --role="roles/storage.objectUser" --project=${GOOGLE_CLOUD_PROJECT} --condition=None 
+gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${DEFAULT_SA_EMAIL}" --role="roles/artifactregistry.writer" --project=${GOOGLE_CLOUD_PROJECT} --condition=None 
+gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${DEFAULT_SA_EMAIL}" --role="roles/cloudbuild.builds.builder" --project=${GOOGLE_CLOUD_PROJECT} --condition=None 
+gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${DEFAULT_SA_EMAIL}" --role="roles/cloudbuild.builds.builder" --project=${GOOGLE_CLOUD_PROJECT} --condition=None 
+
 
 echo "--- 4. Creating Artifact Registry repository (if it doesn't exist) ---"
 # Check if the repository exists and create it if it doesn't.
@@ -50,9 +60,13 @@ gcloud artifacts repositories create ${REPOSITORY} \
     --project=${GOOGLE_CLOUD_PROJECT}
 
 echo "--- 5. Building and pushing the container image using Cloud Build ---"
+echo "${IMAGE_URI}"
+FRONTEND_SOURCE_DIR="a2a_demo_front/front"
+pushd "${FRONTEND_SOURCE_DIR}" > /dev/null
 gcloud builds submit --tag ${IMAGE_URI} --project=${GOOGLE_CLOUD_PROJECT}
+popd > /dev/null
 
-echo "--- 6. Deploying to Cloud Run (initial deployment without waiting) ---"
+echo "--- 6. Deploying to Cloud Run ---"
 # Deploy the service for the first time.
 # The --no-wait flag allows the script to continue without waiting for the revision to be healthy.
 gcloud run deploy ${SERVICE_NAME} \
@@ -62,9 +76,9 @@ gcloud run deploy ${SERVICE_NAME} \
   --allow-unauthenticated \
   --set-env-vars="CHAT_AGENT_SERVER_URL=TO_BE_UPDATED" \
   --project=${GOOGLE_CLOUD_PROJECT} \
-  --allow-unauthenticated \
-  --service-account=${SA_EMAIL}
-  --quiet
+  --no-invoker-iam-check \
+  --service-account=${SA_EMAIL} 
+
 
 echo "--- 7. Retrieving the Cloud Run service URL ---"
 # Add a small delay to ensure the service object is created and has a URL.
@@ -83,19 +97,6 @@ if [ -z "$SERVICE_URL" ]; then
     exit 1
 fi
 
-# echo "--- 6. Updating the service to set its own URL as FRONT_END_URL ---"
-# # Update the service with the new environment variable.
-# # This time we wait for the deployment to complete successfully.
-# gcloud run services update ${SERVICE_NAME} \
-#   --region=${REGION} \
-#   --platform=managed \
-#   --update-env-vars="FRONT_END_URL=${SERVICE_URL}" \
-#   --project=${GOOGLE_CLOUD_PROJECT} \
-#   --quiet
 
-# echo "✅ Deployment complete!"
-# echo ""
-# echo "Your service is available at: ${SERVICE_URL}"
-# echo ""
-# echo "The FRONT_END_URL environment variable has been set on the Cloud Run service."
-# echo "The CHAT_AGENT_SERVER_URL is set to a placeholder and can be updated in the Google Cloud Console."
+echo "The FRONT_END_URL environment variable has been set on the Cloud Run service."
+echo "The CHAT_AGENT_SERVER_URL is set to a placeholder and can be updated in the Google Cloud Console."
