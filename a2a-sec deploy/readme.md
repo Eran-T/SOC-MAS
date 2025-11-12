@@ -70,7 +70,7 @@ This project is deployed using a series of shell scripts orchestrated by `deploy
 
 ```bash
 git clone https://github.com/Eran-T/SOC-MAS.git
-cd SOC-MAS/a2a-sec-deploy
+cd SOC-MAS/a2a-sec\ deploy/
 ```
 
 ### Step 2: Create and Activate a Python Virtual Environment
