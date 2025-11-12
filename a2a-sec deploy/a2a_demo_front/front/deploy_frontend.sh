@@ -16,7 +16,12 @@ gcloud services enable \
   run.googleapis.com \
   artifactregistry.googleapis.com \
   cloudbuild.googleapis.com \
+  run.googleapis.com \
+  eventarc.googleapis.com \
   --project=${GOOGLE_CLOUD_PROJECT}
+
+  
+sleep 5
 
 echo "--- 2. Creating Artifact Registry repository (if it doesn't exist) ---"
 # Check if the repository exists and create it if it doesn't.
