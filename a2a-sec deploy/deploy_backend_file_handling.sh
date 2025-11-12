@@ -38,6 +38,8 @@ export BUCKET_DOWNLOAD_NAME="${PROJECT_NUMBER}-${DOWNLOAD_BUCKET}"
 gsutil mb -p ${GOOGLE_CLOUD_PROJECT} -l ${REGION} gs://${BUCKET_UPLOAD_NAME} || echo "Bucket 'gs://${BUCKET_UPLOAD_NAME}' already exists."
 gsutil mb -p ${GOOGLE_CLOUD_PROJECT} -l ${REGION} gs://${BUCKET_DOWNLOAD_NAME} || echo "Bucket 'gs://${BUCKET_DOWNLOAD_NAME}' already exists."
 
+sleep 3
+
 echo "Buckets created: ${BUCKET_UPLOAD_NAME} and ${BUCKET_DOWNLOAD_NAME}"
 
 # --- Step 2: Create and Configure Service Accounts ---
