@@ -25,7 +25,7 @@ gcloud services enable \
   --project=${GOOGLE_CLOUD_PROJECT}
 
   
-sleep 5
+sleep 10
 
 echo "--- 2. Creating and configuring service account... ---"
 export SA_NAME="${FILE_HANDLER_SERVICE_ACCOUNT_NAME}"
@@ -37,7 +37,7 @@ gcloud iam service-accounts create ${SA_NAME} \
     --description="Service account for the Eventarc file processing function" \
     --project=${GOOGLE_CLOUD_PROJECT} || echo "Service account '${SA_NAME}' already exists."
 
-sleep 5
+sleep 20
 
 
 echo "--- 3. Grant the deploying user permission to act as the service accounts ${GOOGLE_CLOUD_PROJECT}---"
@@ -45,6 +45,9 @@ export DEPLOYING_USER=$(gcloud config get-value account)
 gcloud iam service-accounts add-iam-policy-binding ${SA_EMAIL} --member="user:${DEPLOYING_USER}" --role="roles/iam.serviceAccountUser" --project=${GOOGLE_CLOUD_PROJECT} --condition=None
 gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${SA_EMAIL}" --role="roles/aiplatform.user" --condition=None
 gcloud iam service-accounts add-iam-policy-binding ${SA_EMAIL} --member="serviceAccount:${SA_EMAIL}" --role="roles/iam.serviceAccountTokenCreator" --project=${GOOGLE_CLOUD_PROJECT} --condition=None
+
+sleep 20
+
 gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${DEFAULT_SA_EMAIL}" --role="roles/logging.logWriter" --project=${GOOGLE_CLOUD_PROJECT} --condition=None
 gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${DEFAULT_SA_EMAIL}" --role="roles/storage.objectUser" --project=${GOOGLE_CLOUD_PROJECT} --condition=None 
 gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${DEFAULT_SA_EMAIL}" --role="roles/artifactregistry.writer" --project=${GOOGLE_CLOUD_PROJECT} --condition=None 
