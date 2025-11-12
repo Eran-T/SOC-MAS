@@ -35,8 +35,8 @@ echo -e "\n[Step 1/5] Creating Cloud Storage buckets..."
 export BUCKET_UPLOAD_NAME="${PROJECT_NUMBER}-${UPLOAD_BUCKET}"
 export BUCKET_DOWNLOAD_NAME="${PROJECT_NUMBER}-${DOWNLOAD_BUCKET}"
 
-gsutil mb -p ${GOOGLE_CLOUD_PROJECT} -l ${REGION} gs://${BUCKET_UPLOAD_NAME}
-gsutil mb -p ${GOOGLE_CLOUD_PROJECT} -l ${REGION} gs://${BUCKET_DOWNLOAD_NAME}
+gsutil mb -p ${GOOGLE_CLOUD_PROJECT} -l ${REGION} gs://${BUCKET_UPLOAD_NAME} || echo "Bucket 'gs://${BUCKET_UPLOAD_NAME}' already exists."
+gsutil mb -p ${GOOGLE_CLOUD_PROJECT} -l ${REGION} gs://${BUCKET_DOWNLOAD_NAME} || echo "Bucket 'gs://${BUCKET_DOWNLOAD_NAME}' already exists."
 
 echo "Buckets created: ${BUCKET_UPLOAD_NAME} and ${BUCKET_DOWNLOAD_NAME}"
 
@@ -85,6 +85,8 @@ gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} \
 
 echo "Granted Pub/Sub Publisher role to the GCS service agent."
 
+sleep 5
+
 # --- Step 4: Deploy the Cloud Function with an Eventarc Trigger ---
 echo -e "\n[Step 4/5] Deploying Cloud Function 'soc-file-processor'..."
 gcloud functions deploy soc-file-processor \
@@ -111,7 +113,7 @@ echo "Cloud Function 'soc-file-processor' deployed."
 cat <<EOF > cors_upload.json
 [
   {
-    "origin": ["${SERVICE_URL}"],
+    "origin": ["${SERVICE_URL}", "https://${SERVICE_NAME}-${PROJECT_NUMBER}.${REGION}.run.app"]],
     "method": ["PUT"],
     "responseHeader": ["Content-Type"],
     "maxAgeSeconds": 3600
@@ -122,7 +124,7 @@ gcloud storage buckets update gs://${BUCKET_UPLOAD_NAME} --cors-file=cors_upload
 cat <<EOF > cors_download.json
 [
   {
-    "origin": ["${SERVICE_URL}"],
+    "origin": ["${SERVICE_URL}", "https://${SERVICE_NAME}-${PROJECT_NUMBER}.${REGION}.run.app"],
     "method": ["GET"],
     "responseHeader": ["Content-Type"],
     "maxAgeSeconds": 3600
@@ -134,5 +136,3 @@ gcloud storage buckets update gs://${BUCKET_DOWNLOAD_NAME} --cors-file=cors_down
 
 
 echo -e "\n--- DEPLOYMENT COMPLETE ---"
-echo "A test file 'sample.txt' has been uploaded to 'gs://${BUCKET_UPLOAD_NAME}'."
-echo "Check the function logs and the download bucket 'gs://${BUCKET_DOWNLOAD_NAME}' to verify the pipeline."
