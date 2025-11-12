@@ -23,7 +23,23 @@ gcloud services enable \
   
 sleep 5
 
-echo "--- 2. Creating Artifact Registry repository (if it doesn't exist) ---"
+echo "--- 2. Creating and configuring service account... ---"
+export SA_NAME="${FILE_HANDLER_SERVICE_ACCOUNT_NAME}"
+export SA_EMAIL="${SA_NAME}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
+export DISPLAY_NAME="File Processor Service Account"
+
+gcloud iam service-accounts create ${SA_NAME} \
+    --display-name="${DISPLAY_NAME}" \
+    --description="Service account for the Eventarc file processing function" \
+    --project=${GOOGLE_CLOUD_PROJECT} || echo "Service account '${SA_NAME}' already exists."
+
+echo "--- 3. Grant the deploying user permission to act as the service accounts ---"
+export DEPLOYING_USER=$(gcloud config get-value account)
+gcloud iam service-accounts add-iam-policy-binding ${SA_EMAIL} --member="user:${DEPLOYING_USER}" --role="roles/iam.serviceAccountUser" --project=${GOOGLE_CLOUD_PROJECT} --condition=None
+gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${SA_EMAIL}" --role="roles/aiplatform.user" --condition=None
+gcloud iam service-accounts add-iam-policy-binding ${SA_EMAIL} --member="serviceAccount:${SA_EMAIL}" --role="roles/iam.serviceAccountTokenCreator" --condition=None
+
+echo "--- 4. Creating Artifact Registry repository (if it doesn't exist) ---"
 # Check if the repository exists and create it if it doesn't.
 gcloud artifacts repositories describe ${REPOSITORY} --location=${REGION} --project=${GOOGLE_CLOUD_PROJECT} > /dev/null 2>&1 || \
 gcloud artifacts repositories create ${REPOSITORY} \
@@ -32,10 +48,10 @@ gcloud artifacts repositories create ${REPOSITORY} \
     --description="Docker repository for Cloud Run services" \
     --project=${GOOGLE_CLOUD_PROJECT}
 
-echo "--- 3. Building and pushing the container image using Cloud Build ---"
+echo "--- 5. Building and pushing the container image using Cloud Build ---"
 gcloud builds submit --tag ${IMAGE_URI} --project=${GOOGLE_CLOUD_PROJECT}
 
-echo "--- 4. Deploying to Cloud Run (initial deployment without waiting) ---"
+echo "--- 6. Deploying to Cloud Run (initial deployment without waiting) ---"
 # Deploy the service for the first time.
 # The --no-wait flag allows the script to continue without waiting for the revision to be healthy.
 gcloud run deploy ${SERVICE_NAME} \
@@ -46,9 +62,10 @@ gcloud run deploy ${SERVICE_NAME} \
   --set-env-vars="CHAT_AGENT_SERVER_URL=TO_BE_UPDATED" \
   --project=${GOOGLE_CLOUD_PROJECT} \
   --allow-unauthenticated \
+  --service-account=${SA_EMAIL}
   --quiet
 
-echo "--- 5. Retrieving the Cloud Run service URL ---"
+echo "--- 7. Retrieving the Cloud Run service URL ---"
 # Add a small delay to ensure the service object is created and has a URL.
 sleep 5 
 SERVICE_URL=$(gcloud run services describe ${SERVICE_NAME} \
