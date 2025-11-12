@@ -14,29 +14,101 @@ storage_client = storage.Client()
 BUCKET_UPLOAD_NAME = os.environ.get('BUCKET_UPLOAD_NAME')
 BUCKET_DOWNLOAD_NAME = os.environ.get('BUCKET_DOWNLOAD_NAME')
 
-def get_disassembled_content(file_content: bytes) -> str:
-    """Disassembles binary code from byte content using the Capstone library."""
-    try:
-        # Initialize Capstone for x86 64-bit architecture
-        md = capstone.Cs(capstone.CS_ARCH_X86, capstone.CS_MODE_64)
-        
-        disassembled_lines = []
-        # Create a generator for the disassembled instructions.
-        instructions = md.disasm(file_content, 0x1000) # 0x1000 is a conventional starting address
+import re
+import struct
 
+def extract_strings(data: bytes, min_length: int = 4) -> str:
+    """Helper to find ASCII strings in the raw bytes."""
+    # Find sequences of printable characters
+    pattern = rb"[ -~]{" + str(min_length).encode() + rb",}"
+    found = []
+    for match in re.finditer(pattern, data):
+        # Decode bytes to string
+        s = match.group().decode("ascii", errors="ignore")
+        found.append(f"Offset 0x{match.start():x}: {s}")
+    
+    if not found: return "No readable strings found."
+    # Limit output to 20 lines to keep it clean
+    return "\n".join(found[:30])
+
+def analyze_binary(file_content: bytes) -> str:
+    output = []
+    
+    # --- 1. STRING EXTRACTION (The missing part) ---
+    output.append("--- 1. Readable Strings (Data Section) ---")
+    output.append(extract_strings(file_content))
+    output.append("-" * 40)
+
+    # --- 2. ARCHITECTURE DETECTION ---
+    arch = capstone.CS_ARCH_X86
+    mode = capstone.CS_MODE_64
+    arch_name = "x86_64 (Default)"
+    
+    # Check for Mach-O Magic Number (0xfeedfacf)
+    if file_content.startswith(b'\xcf\xfa\xed\xfe'):
+        cpu_type = struct.unpack('<I', file_content[4:8])[0]
+        if cpu_type == 16777228: # ARM64
+            arch = capstone.CS_ARCH_ARM64
+            mode = capstone.CS_MODE_ARM
+            arch_name = "ARM64 (Apple Silicon)"
+        elif cpu_type == 16777223: # x86_64
+            arch_name = "x86_64 (Intel)"
+            
+    output.append(f"\n--- 2. Code Analysis ({arch_name}) ---")
+
+    # --- 3. FIND CODE ENTRY POINT ---
+    code_offset = 0
+    entry_method = "Header Lookup"
+    
+    # Try to find the '__text' section definition in the headers
+    match = re.search(b'__text\x00', file_content)
+    if match:
+        # Jump to where the "offset" integer is stored in the section header
+        # In Mach-O 64, offset is 48 bytes after the name start
+        offset_ptr = match.start() + 48
+        if offset_ptr + 4 < len(file_content):
+            code_offset = struct.unpack('<I', file_content[offset_ptr:offset_ptr+4])[0]
+    
+    # Fallback: If header lookup failed (offset is 0), scan for signatures
+    if code_offset == 0:
+        entry_method = "Signature Scan"
+        if arch == capstone.CS_ARCH_ARM64:
+            # Look for ARM64 function start (stp x29, x30...)
+            pos = file_content.find(b'\xfd\x7b') 
+            code_offset = pos if pos != -1 else 0x1000
+        else:
+            # Look for x86 function start (push rbp; mov rbp, rsp)
+            pos = file_content.find(b'\x55\x48\x89\xe5')
+            code_offset = pos if pos != -1 else 0x1000
+
+    output.append(f"Disassembling at Offset: 0x{code_offset:x} (Method: {entry_method})")
+
+    # --- 4. DISASSEMBLE ---
+    try:
+        md = capstone.Cs(arch, mode)
+        md.skipdata = True # Don't crash on data bytes
+        
+        # Grab a chunk of code at the calculated offset
+        # We limit to 200 bytes to prevent flooding the screen
+        code_chunk = file_content[code_offset : code_offset + 200]
+        instructions = md.disasm(code_chunk, code_offset)
+        
+        output.append("\n--- Instructions ---")
+        count = 0
         for i in instructions:
             hex_bytes = " ".join([f"{b:02x}" for b in i.bytes])
-            line = f"0x{i.address:x}:\t{hex_bytes:<24}\t{i.mnemonic}\t{i.op_str}"
-            disassembled_lines.append(line)
-        
-        if not disassembled_lines:
-            return "No valid instructions were disassembled. The file may be packed or not an executable."
+            # Formatting: Address | Hex | Mnemonic | Operands
+            line = f"0x{i.address:x}:\t{hex_bytes:<20}\t{i.mnemonic}\t{i.op_str}"
+            output.append(line)
+            count += 1
+            
+        if count == 0:
+            output.append("No instructions decoded. The file might be encrypted or compressed.")
 
-        return "\n".join(disassembled_lines)
+    except Exception as e:
+        output.append(f"Disassembly Error: {e}")
 
-    except capstone.CsError as e:
-        print(f"Capstone disassembly error: {e}")
-        return f"Error: Could not disassemble the file. {e}"
+    return "\n".join(output)
         
 @functions_framework.cloud_event
 def process_file_upload(cloud_event: CloudEvent) -> None:
@@ -84,7 +156,7 @@ def process_file_upload(cloud_event: CloudEvent) -> None:
     # --- 5. Process the File: Generate Disassembled Code ---
     try:
         # 1. Disassemble the file content directly using the Capstone function
-        disassembled_content = get_disassembled_content(file_content)
+        disassembled_content = analyze_binary(file_content)
         # 2. Upload the disassembled content string to Cloud Storage
         asm_file_name = f"{file_name}/disassembled.txt"
         asm_blob = download_bucket.blob(asm_file_name)
