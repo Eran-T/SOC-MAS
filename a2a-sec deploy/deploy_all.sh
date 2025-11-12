@@ -73,18 +73,7 @@ if (( START_STEP <= 1 )); then
 
     export IMAGE_URI="${REGION}-docker.pkg.dev/${GOOGLE_CLOUD_PROJECT}/${REPOSITORY}/${SERVICE_NAME}:latest"
     FRONTEND_SOURCE_DIR="a2a_demo_front/front"
-    echo "--- Enabling Google Cloud services ---"
-    gcloud services enable run.googleapis.com artifactregistry.googleapis.com cloudbuild.googleapis.com --project=${GOOGLE_CLOUD_PROJECT}
-    echo "--- Creating Artifact Registry repository (if it doesn't exist) ---"
-    gcloud artifacts repositories describe ${REPOSITORY} --location=${REGION} --project=${GOOGLE_CLOUD_PROJECT} > /dev/null 2>&1 || \
-    gcloud artifacts repositories create ${REPOSITORY} --repository-format=docker --location=${REGION} --description="Docker repository for Cloud Run services" --project=${GOOGLE_CLOUD_PROJECT}
-    echo "--- Building and pushing the container image using Cloud Build ---"
-    pushd "${FRONTEND_SOURCE_DIR}" > /dev/null
-    gcloud builds submit --tag ${IMAGE_URI} --project=${GOOGLE_CLOUD_PROJECT}
-    popd > /dev/null
-    echo "--- Deploying to Cloud Run ---"
-    gcloud run deploy ${SERVICE_NAME} --image=${IMAGE_URI} --platform=managed --region=${REGION} --allow-unauthenticated --set-env-vars="CHAT_AGENT_SERVER_URL=TO_BE_UPDATED" --project=${GOOGLE_CLOUD_PROJECT} --quiet
-    echo "--- Retrieving the Cloud Run service URL ---"
+    source ./a2a_demo_front/front/deploy_frontend.sh
     sleep 5
     # SERVICE_URL_VAL="https://${SERVICE_NAME}-${PROJECT_NUMBER}.${REGION}.run.app"
     SERVICE_URL_VAL=$(gcloud run services describe ${SERVICE_NAME} --region=${REGION} --project=${GOOGLE_CLOUD_PROJECT} --format="value(status.url)")
@@ -102,7 +91,6 @@ if (( START_STEP <= 2 )); then
     if [ -z "$PROJECT_NUMBER" ]; then echo "❌ Error: PROJECT_NUMBER not set. Please run PART 1 first."; return 1; fi
     GTI_AGENT_DIR="agents/remote_agents/gti_agent"
     CUSTOM_GTI_DEPLOY_SCRIPT="setup_alt.py" 
-
     if [ -f "${GTI_AGENT_DIR}/${CUSTOM_GTI_DEPLOY_SCRIPT}" ]; then
         echo "▶️  Found custom Python deploy script. Executing..."
         echo "--- Preparing staging bucket for GTI Agent ---"
@@ -142,8 +130,7 @@ if (( START_STEP <= 3 )); then
         RESOURCE_VAR_NAME="${VAR_PREFIX}_RESOURCE_NAME"
         # Indirectly get the value of the variable
         RESOURCE_VALUE=$(eval echo "\$${RESOURCE_VAR_NAME}")
-        echo "✅✅✅here is resource value: ${RESOURCE_VALUE}✅✅"
-        echo "✅✅✅after printing resource value✅✅✅"
+        echo "✅here is resource value: ${RESOURCE_VALUE}"
         update_config "${RESOURCE_VAR_NAME}" "${RESOURCE_VALUE}"
         echo "✅ ${AGENT_NAME} deployment complete. Resource name saved."
         echo "------------------------------------------------------------"
