@@ -43,15 +43,9 @@ echo "Buckets created: ${BUCKET_UPLOAD_NAME} and ${BUCKET_DOWNLOAD_NAME}"
 # --- Step 2: Create and Configure Service Accounts ---
 echo -e "\n[Step 2/5] Creating and configuring service accounts..."
 
-# 1. Function Identity Service Account
+# 1. Set Function Identity Service Account
 export SA_NAME="${FILE_HANDLER_SERVICE_ACCOUNT_NAME}"
 export SA_EMAIL="${SA_NAME}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
-export DISPLAY_NAME="File Processor Service Account"
-
-gcloud iam service-accounts create ${SA_NAME} \
-    --display-name="${DISPLAY_NAME}" \
-    --description="Service account for the Eventarc file processing function" \
-    --project=${GOOGLE_CLOUD_PROJECT} || echo "Service account '${SA_NAME}' already exists."
 
 # 2. Grant Storage permissions to the Function SA
 gcloud storage buckets add-iam-policy-binding gs://${BUCKET_UPLOAD_NAME} --member="serviceAccount:${SA_EMAIL}" --role="roles/storage.objectViewer" --project=${GOOGLE_CLOUD_PROJECT}
@@ -64,13 +58,8 @@ gcloud storage buckets add-iam-policy-binding gs://${BUCKET_DOWNLOAD_NAME} --mem
 # 3. Grant Eventarc Event Receiver role to the Function SA
 gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${SA_EMAIL}" --role="roles/eventarc.eventReceiver" --project=${GOOGLE_CLOUD_PROJECT} --condition=None
 
-# 4. Grant the deploying user permission to act as the Function SA
-export DEPLOYING_USER=$(gcloud config get-value account)
-gcloud iam service-accounts add-iam-policy-binding ${SA_EMAIL} --member="user:${DEPLOYING_USER}" --role="roles/iam.serviceAccountUser" --project=${GOOGLE_CLOUD_PROJECT} --condition=None
-gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${SA_EMAIL}" --role="roles/aiplatform.user" --condition=None
-gcloud iam service-accounts add-iam-policy-binding ${SA_EMAIL} --member="serviceAccount:${SA_EMAIL}" --role="roles/iam.serviceAccountTokenCreator" --condition=None
 
-# 5. Trigger Identity Service Account
+# 4. Trigger Identity Service Account
 export TRIGGER_SA_NAME="processor-trigger-sa"
 export TRIGGER_SA_EMAIL="${TRIGGER_SA_NAME}@${GOOGLE_CLOUD_PROJECT}.iam.gserviceaccount.com"
 export TRIGGER_DISPLAY_NAME="Processor Trigger Service Account"
@@ -80,7 +69,7 @@ gcloud iam service-accounts create ${TRIGGER_SA_NAME} \
     --description="Service account for the Eventarc trigger to invoke the function" \
     --project=${GOOGLE_CLOUD_PROJECT} || echo "Service account '${TRIGGER_SA_NAME}' already exists."
 
-# 6. Grant Eventarc Event Receiver role to the Trigger SA
+# 5. Grant Eventarc Event Receiver role to the Trigger SA
 gcloud projects add-iam-policy-binding ${GOOGLE_CLOUD_PROJECT} --member="serviceAccount:${TRIGGER_SA_EMAIL}" --role="roles/eventarc.eventReceiver" --project=${GOOGLE_CLOUD_PROJECT} --condition=None
 
 echo "Service accounts created and configured."
