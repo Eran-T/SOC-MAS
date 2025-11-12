@@ -80,7 +80,7 @@ This isolates the project's dependencies.
 # Create the virtual environment
 python3 -m venv venv
 # Activate it (macOS/Linux)
-source venv/bin/activate
+. ./venv/bin/activate
 # Or (Windows Command Prompt): 
 .\venv\Scripts\activate.bat
 # Or (Windows PowerShell): 
