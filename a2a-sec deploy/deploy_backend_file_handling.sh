@@ -101,7 +101,11 @@ gcloud functions deploy soc-file-processor \
   --trigger-service-account ${TRIGGER_SA_EMAIL} \
   --trigger-event-filters="type=google.cloud.storage.object.v1.finalized,bucket=${BUCKET_UPLOAD_NAME}" \
   --set-env-vars BUCKET_UPLOAD_NAME=${BUCKET_UPLOAD_NAME},BUCKET_DOWNLOAD_NAME=${BUCKET_DOWNLOAD_NAME} \
-  --project=${GOOGLE_CLOUD_PROJECT}
+  --project=${GOOGLE_CLOUD_PROJECT} || echo "retrying"
+
+sleep 5
+
+gcloud functions deploy soc-file-processor --gen2  --runtime python311 --entry-point process_file_upload --region ${REGION}  --source "./deployment/file-processor" --service-account ${SA_EMAIL}  --trigger-service-account ${TRIGGER_SA_EMAIL}  --trigger-event-filters="type=google.cloud.storage.object.v1.finalized,bucket=${BUCKET_UPLOAD_NAME}"  --set-env-vars BUCKET_UPLOAD_NAME=${BUCKET_UPLOAD_NAME},BUCKET_DOWNLOAD_NAME=${BUCKET_DOWNLOAD_NAME} --project=${GOOGLE_CLOUD_PROJECT} || echo "retried"
 
 echo "Granting invoker permission to the trigger service account..."
 gcloud functions add-invoker-policy-binding soc-file-processor \
