@@ -20,6 +20,7 @@ gcloud services enable \
   eventarc.googleapis.com \
   aiplatform.googleapis.com \
   cloudfunctions.googleapis.com \
+  storage.googleapis.com \
   --project=${GOOGLE_CLOUD_PROJECT}
 
   
