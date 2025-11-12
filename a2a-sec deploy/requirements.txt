@@ -12,9 +12,8 @@ fastapi==0.116.1
 google-adk==1.17.0
 google-api-python-client==2.176.0
 google-auth-httplib2==0.2.0
-google-cloud-aiplatform==1.120.0
 google-cloud-appengine-logging==1.6.2
-google-cloud-aiplatform[agent_engines, adk]>=1.112.0
+google-cloud-aiplatform[agent_engines, adk]>=1.122.0
 google-cloud-audit-log==0.3.2
 google-cloud-bigquery==3.35.0
 google-cloud-bigtable==2.33.0
