@@ -119,7 +119,7 @@ echo "Cloud Function 'soc-file-processor' deployed."
 cat <<EOF > cors_upload.json
 [
   {
-    "origin": ["${SERVICE_URL}", "https://${SERVICE_NAME}-${PROJECT_NUMBER}.${REGION}.run.app"]],
+    "origin": ["${SERVICE_URL}", "https://${SERVICE_NAME}-${PROJECT_NUMBER}.${REGION}.run.app"],
     "method": ["PUT"],
     "responseHeader": ["Content-Type"],
     "maxAgeSeconds": 3600
